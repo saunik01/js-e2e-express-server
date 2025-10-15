@@ -19,3 +19,38 @@ steps:
     npm install
     npm run build
   displayName: 'npm install and build'
+
+  # Lisää tämä osa aiemman pipeline-konfiguraation loppuun
+# Vaihda omat arvosi seuraaviin kohtiin:
+
+- task: ArchiveFiles@2
+  displayName: 'Archive application files'
+  inputs:
+    rootFolderOrFile: '$(System.DefaultWorkingDirectory)'
+    includeRootFolder: false
+    archiveType: 'zip'
+    archiveFile: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip'
+    replaceExistingArchive: true
+
+- task: PublishBuildArtifacts@1
+  displayName: 'Publish build artifacts'
+  inputs:
+    PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+    ArtifactName: 'drop'
+    publishLocation: 'Container'
+
+- task: DownloadBuildArtifacts@0
+  displayName: 'Download build artifacts'
+  inputs:
+    buildType: 'current'
+    downloadType: 'single'
+    artifactName: 'drop'
+    downloadPath: '$(System.DefaultWorkingDirectory)'
+
+- task: AzureWebApp@1
+  displayName: 'Deploy to Azure Web App'
+  inputs:
+    azureSubscription: 'Azure Connection'  # VAIHDA: Palveluyhteyden nimi
+    appType: 'webApp'
+    appName: 'saukko-exercise-12'  # VAIHDA: Web App -sovelluksesi nimi
+    package: '$(System.DefaultWorkingDirectory)/drop/$(Build.BuildId).zip'
